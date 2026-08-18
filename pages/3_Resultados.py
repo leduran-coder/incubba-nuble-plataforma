@@ -2,15 +2,16 @@ import streamlit as st
 
 from auth import requerir_login
 from db.database import get_session
-from config.theme import css_global, hero
+from config.theme import css_global, hero, sidebar_branding
 from config.rubric import CRITERIOS_ADICIONALES
 from utils.scoring import tabla_ranking
 
 st.set_page_config(page_title="Resultados · Incubba Ñuble UBB", page_icon="🏆", layout="wide")
 st.markdown(css_global(), unsafe_allow_html=True)
-requerir_login()
+usuario = requerir_login()
+sidebar_branding(usuario)
 
-st.markdown(hero("Resultados y ranking final", "Puntaje ponderado por etapas + bonificación por potencial dinámico"), unsafe_allow_html=True)
+st.markdown(hero("Resultados y Ranking Final", "Puntajes consolidados, bonificación dinámica y cumplimiento de metas", pill="Selección Oficial"), unsafe_allow_html=True)
 
 session = get_session()
 try:

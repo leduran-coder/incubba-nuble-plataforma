@@ -4,13 +4,14 @@ import streamlit as st
 from auth import requerir_login
 from db.database import get_session
 from db.models import Postulacion
-from config.theme import css_global, hero
+from config.theme import css_global, hero, sidebar_branding
 
 st.set_page_config(page_title="Postulaciones · Incubba Ñuble UBB", page_icon="📋", layout="wide")
 st.markdown(css_global(), unsafe_allow_html=True)
-requerir_login()
+usuario = requerir_login()
+sidebar_branding(usuario)
 
-st.markdown(hero("Postulaciones", "Listado importado desde el formulario de postulación 2026"), unsafe_allow_html=True)
+st.markdown(hero("Postulaciones", "Listado y fichas completas de proyectos postulantes 2026", pill="Registro Oficial"), unsafe_allow_html=True)
 
 session = get_session()
 try:
@@ -42,7 +43,7 @@ if df.empty:
     )
     st.stop()
 
-with st.expander("Filtros", expanded=True):
+with st.expander("🔍 Filtros de Búsqueda Avanzada", expanded=False):
     c1, c2, c3, c4 = st.columns(4)
     f_provincia = c1.multiselect("Provincia", sorted(df["Provincia"].dropna().unique()))
     f_comuna = c2.multiselect("Comuna", sorted(df["Comuna"].dropna().unique()))
@@ -59,53 +60,73 @@ if f_genero:
 if f_tipo:
     df_filtrado = df_filtrado[df_filtrado["Tipo"].isin(f_tipo)]
 
-st.caption(f"Mostrando {len(df_filtrado)} de {len(df)} postulaciones.")
+st.markdown(
+    f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-weight:700; color:#0F172A; font-size:1.1rem;">Listado General</span>
+        <span style="background:rgba(124,58,237,0.1); color:#7C3AED; font-weight:700; font-size:0.85rem; padding:4px 12px; border-radius:999px;">
+            Mostrando {len(df_filtrado)} de {len(df)} postulaciones
+        </span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
 
-st.divider()
-st.subheader("Ver detalle de una postulación")
+st.markdown("---")
+st.markdown("### 📄 Ficha Técnica de Postulación")
 opciones = {f"#{p.id} · {p.nombre_proyecto} — {p.nombre_completo}": p.id for p in postulaciones}
-seleccion = st.selectbox("Selecciona una postulación", list(opciones.keys()))
+seleccion = st.selectbox("Selecciona una postulación para ver antecedentes", list(opciones.keys()))
 
 if seleccion:
     session = get_session()
     try:
         p = session.get(Postulacion, opciones[seleccion])
+        
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("**Antecedentes generales**")
-            st.write(f"- Postulante: {p.nombre_completo}")
-            st.write(f"- RUN: {p.run}")
-            st.write(f"- Correo: {p.correo}  ·  Teléfono: {p.telefono}")
-            st.write(f"- Género: {p.genero}")
-            st.write(f"- Residencia: {p.residencia_tipo} — {p.provincia} / {p.comuna}")
-            st.markdown("**Emprendimiento**")
-            st.write(f"- Nombre: {p.nombre_proyecto}")
-            st.write(f"- Tipo: {p.tipo_emprendimiento} — {p.estado_detalle}")
-            st.write(f"- Empresa: {p.nombre_empresa} ({p.rut_empresa}) — {p.tipo_empresa}")
-            st.write(f"- Sector/industria: {p.sector_industria}  ·  Tamaño: {p.tamano_empresa}")
+            st.markdown(
+                f"""
+                <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px; box-shadow:0 2px 6px rgba(0,0,0,0.03); margin-bottom:16px;">
+                    <h4 style="color:#7C3AED; margin-top:0; border-bottom:2px solid #F1F5F9; padding-bottom:8px;">👤 Antecedentes del Postulante</h4>
+                    <p style="margin:6px 0;"><strong>Postulante:</strong> {p.nombre_completo}</p>
+                    <p style="margin:6px 0;"><strong>RUN:</strong> {p.run}</p>
+                    <p style="margin:6px 0;"><strong>Contacto:</strong> {p.correo} · {p.telefono}</p>
+                    <p style="margin:6px 0;"><strong>Género:</strong> {p.genero}</p>
+                    <p style="margin:6px 0;"><strong>Ubicación:</strong> {p.provincia} / {p.comuna} ({p.residencia_tipo})</p>
+                    <h4 style="color:#7C3AED; margin-top:16px; border-bottom:2px solid #F1F5F9; padding-bottom:8px;">🏢 Emprendimiento</h4>
+                    <p style="margin:6px 0;"><strong>Proyecto:</strong> {p.nombre_proyecto}</p>
+                    <p style="margin:6px 0;"><strong>Estado:</strong> {p.tipo_emprendimiento} — {p.estado_detalle}</p>
+                    <p style="margin:6px 0;"><strong>Empresa:</strong> {p.nombre_empresa or 'No formalizada'} ({p.rut_empresa or 'S/RUT'})</p>
+                    <p style="margin:6px 0;"><strong>Sector:</strong> {p.sector_industria} · <strong>Tamaño:</strong> {p.tamano_empresa}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         with col2:
-            st.markdown("**Innovación y escalabilidad**")
-            st.write(f"- ¿Es innovación?: {p.cree_que_es_innovacion}")
-            st.write(f"- Tipo de potencial innovador: {p.tipo_potencial_innovador}")
-            st.write(f"- Tipo de innovación: {p.tipo_innovacion}")
-            st.write(f"- Alcance: {p.alcance_innovacion}")
-            st.write(f"- ¿Ha levantado financiamiento?: {p.ha_levantado_financiamiento}")
-            st.markdown("**Equipo**")
-            st.write(f"- N° de personas: {p.num_personas_equipo}")
-            st.write(f"- Video pitch: {p.video_link or 'sin enlace'}")
+            st.markdown(
+                f"""
+                <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px; box-shadow:0 2px 6px rgba(0,0,0,0.03); margin-bottom:16px;">
+                    <h4 style="color:#0D9488; margin-top:0; border-bottom:2px solid #F1F5F9; padding-bottom:8px;">💡 Innovación y Escalabilidad</h4>
+                    <p style="margin:6px 0;"><strong>Potencial innovador:</strong> {p.tipo_potencial_innovador}</p>
+                    <p style="margin:6px 0;"><strong>Tipo innovación:</strong> {p.tipo_innovacion}</p>
+                    <p style="margin:6px 0;"><strong>Alcance territorial:</strong> {p.alcance_innovacion}</p>
+                    <p style="margin:6px 0;"><strong>Financiamiento previo:</strong> {p.ha_levantado_financiamiento}</p>
+                    <h4 style="color:#0D9488; margin-top:16px; border-bottom:2px solid #F1F5F9; padding-bottom:8px;">👥 Equipo y Pitch</h4>
+                    <p style="margin:6px 0;"><strong>Integrantes:</strong> {p.num_personas_equipo} personas</p>
+                    <p style="margin:6px 0;"><strong>Video Pitch:</strong> {f'<a href="{p.video_link}" target="_blank" style="color:#2563EB; font-weight:600;">Ver video ↗</a>' if p.video_link and p.video_link.startswith('http') else p.video_link or 'No registrado'}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        st.markdown("**Descripción**")
-        st.write(p.descripcion or "—")
-        st.markdown("**Propuesta de valor**")
-        st.write(p.propuesta_valor or "—")
-        st.markdown("**Por qué es innovador**")
-        st.write(p.por_que_innovador or "—")
-        st.markdown("**Resultados esperados a 3 años**")
-        st.write(p.resultados_3_anios or "—")
-        st.markdown("**Impacto esperado**")
-        st.write(p.impacto_esperado or "—")
-        st.markdown("**Equipo (detalle)**")
-        st.write(p.descripcion_equipo or "—")
+        with st.expander("📖 Respuestas Detalladas del Formulario", expanded=True):
+            st.markdown(f"**Descripción del Proyecto:**\n\n{p.descripcion or '—'}")
+            st.markdown(f"**Propuesta de Valor:**\n\n{p.propuesta_valor or '—'}")
+            st.markdown(f"**Justificación de Innovación:**\n\n{p.por_que_innovador or '—'}")
+            st.markdown(f"**Proyección a 3 años:**\n\n{p.resultados_3_anios or '—'}")
+            st.markdown(f"**Impacto Esperado:**\n\n{p.impacto_esperado or '—'}")
+            st.markdown(f"**Descripción del Equipo:**\n\n{p.descripcion_equipo or '—'}")
     finally:
         session.close()
+

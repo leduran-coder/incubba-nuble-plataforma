@@ -5,14 +5,15 @@ from auth import requerir_rol, crear_usuario, hash_password
 from db.database import get_session
 from db.models import Usuario
 from db.config_store import get_config, set_config
-from config.theme import css_global, hero
+from config.theme import css_global, hero, sidebar_branding
 from utils.importer import FIELD_DEFINITIONS, sugerir_mapeo, importar_dataframe
 
 st.set_page_config(page_title="Configuración · Incubba Ñuble UBB", page_icon="⚙️", layout="wide")
 st.markdown(css_global(), unsafe_allow_html=True)
 usuario = requerir_rol("admin")
+sidebar_branding(usuario)
 
-st.markdown(hero("Configuración", "Solo visible para administradores/as"), unsafe_allow_html=True)
+st.markdown(hero("Panel de Configuración y Administración", "Importación masiva, gestión del comité evaluador y calibración de ponderaciones", pill="Solo Administradores"), unsafe_allow_html=True)
 
 tab_import, tab_usuarios, tab_bono, tab_pesos, tab_cuenta = st.tabs([
     "📥 Importar postulaciones", "👥 Evaluadores", "🚀 Bonificación",

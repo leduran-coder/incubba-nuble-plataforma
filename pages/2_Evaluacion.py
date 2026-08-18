@@ -5,14 +5,15 @@ from db.database import get_session
 from db.models import Postulacion, Evaluacion, BonificacionManual
 from db.config_store import get_config
 from config.rubric import ETAPA_1, ETAPA_2, ETAPA_3, calcular_puntaje_criterio
-from config.theme import css_global, hero
+from config.theme import css_global, hero, sidebar_branding
 from utils.scoring import promedio_etapa, estado_admisibilidad, calcular_bonificacion
 
-st.set_page_config(page_title="Evaluación · Incubba Ñuble UBB", page_icon="✅", layout="wide")
+st.set_page_config(page_title="Evaluación · Incubba Ñuble UBB", page_icon="🎯", layout="wide")
 st.markdown(css_global(), unsafe_allow_html=True)
 usuario = requerir_login()
+sidebar_branding(usuario)
 
-st.markdown(hero("Evaluación de postulaciones", "Calificación según las rúbricas oficiales de las bases"), unsafe_allow_html=True)
+st.markdown(hero("Evaluación de Postulaciones", "Calificación según las rúbricas oficiales de las bases y bonificación dinámica", pill="Pauta de Evaluación"), unsafe_allow_html=True)
 
 session = get_session()
 try:

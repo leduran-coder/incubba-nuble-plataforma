@@ -4,15 +4,16 @@ import streamlit as st
 from auth import requerir_login
 from db.database import get_session
 from db.models import Postulacion
-from config.theme import css_global, hero
+from config.theme import css_global, hero, sidebar_branding
 from utils.charts import barra_magnitud, meter
 from utils.scoring import tabla_ranking
 
 st.set_page_config(page_title="Estadísticas · Incubba Ñuble UBB", page_icon="📊", layout="wide")
 st.markdown(css_global(), unsafe_allow_html=True)
-requerir_login()
+usuario = requerir_login()
+sidebar_branding(usuario)
 
-st.markdown(hero("Estadísticas de postulaciones", "Género, cobertura territorial, formalización e innovación"), unsafe_allow_html=True)
+st.markdown(hero("Estadísticas Territoriales y de Género", "Análisis demográfico, comunal, formalización y sectores productivos de Ñuble", pill="Dashboard Analítico"), unsafe_allow_html=True)
 
 session = get_session()
 try:
