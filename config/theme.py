@@ -4,6 +4,7 @@ Centraliza colores, estilos responsive (PC / móvil), logotipo oficial
 y componentes de interfaz con alto contraste y micro-interacciones.
 """
 import base64
+import re
 from pathlib import Path
 
 # --- Paleta de Marca Oficial (extraída del logo y bases) ---
@@ -42,6 +43,22 @@ PALETA_DIVERGENTE = ["#2563EB", "#93C5FD", "#F1F5F9", "#FCA5A5", "#DC2626"]
 COLOR_BUENO = "#16A34A"
 COLOR_ADVERTENCIA = "#D97706"
 COLOR_CRITICO = "#DC2626"
+
+
+def _flatten_html(html: str) -> str:
+    """
+    Elimina la indentación de cada línea del HTML antes de pasarlo a
+    st.markdown().
+
+    Por qué es necesario: Streamlit pasa el contenido de st.markdown()
+    por un parser de Markdown (CommonMark) antes de interpretar el HTML.
+    Si una línea del string queda con 4 o más espacios de indentación
+    (algo casi inevitable al escribir HTML "prolijo" dentro de funciones
+    Python anidadas), Markdown la interpreta como un BLOQUE DE CÓDIGO y
+    la muestra como texto plano en vez de renderizarla como HTML.
+    Esta función aplana cualquier indentación para evitar ese problema.
+    """
+    return re.sub(r"(?m)^[ \t]+", "", html).strip()
 
 
 def get_logo_base64() -> str:
@@ -424,7 +441,7 @@ def hero(titulo: str, subtitulo: str = "", pill: str = "Convocatoria 2026") -> s
     título de la sección, subtítulo y píldora de estado con animación de pulso.
     """
     logo_src = get_logo_base64()
-    
+
     logo_html = ""
     if logo_src:
         logo_html = f"""
@@ -450,7 +467,7 @@ def hero(titulo: str, subtitulo: str = "", pill: str = "Convocatoria 2026") -> s
 
     sub_html = f'<p class="incubba-hero-sub">{subtitulo}</p>' if subtitulo else ""
 
-    return f"""
+    html = f"""
     <div class="incubba-hero-container">
         <div class="incubba-hero-content">
             <h1 class="incubba-hero-title">{titulo}</h1>
@@ -460,6 +477,7 @@ def hero(titulo: str, subtitulo: str = "", pill: str = "Convocatoria 2026") -> s
         {logo_html}
     </div>
     """
+    return _flatten_html(html)
 
 
 def sidebar_branding(usuario_info=None):
@@ -471,11 +489,11 @@ def sidebar_branding(usuario_info=None):
     logo_src = get_logo_base64()
     if logo_src:
         st.sidebar.markdown(
-            f"""
+            _flatten_html(f"""
             <div style="background:#FFFFFF; padding:12px 16px; border-radius:14px; margin-bottom:16px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
                 <img src="{logo_src}" style="max-width:100%; max-height:48px; object-fit:contain;" alt="Incubba" />
             </div>
-            """,
+            """),
             unsafe_allow_html=True,
         )
 
@@ -483,7 +501,7 @@ def sidebar_branding(usuario_info=None):
         rol_badge_color = "#2DD4BF" if usuario_info.get("rol") == "admin" else "#93C5FD"
         rol_label = "Administrador/a" if usuario_info.get("rol") == "admin" else "Evaluador/a"
         st.sidebar.markdown(
-            f"""
+            _flatten_html(f"""
             <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:10px 14px; margin-bottom:16px;">
                 <div style="color:#94A3B8; font-size:0.75rem; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Usuario activo</div>
                 <div style="color:#FFFFFF; font-weight:700; font-size:0.95rem; margin-top:2px;">{usuario_info.get('nombre', '')}</div>
@@ -491,7 +509,6 @@ def sidebar_branding(usuario_info=None):
                     {rol_label}
                 </div>
             </div>
-            """,
+            """),
             unsafe_allow_html=True,
         )
-
